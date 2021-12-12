@@ -98,7 +98,7 @@ function canvasToViewport(x, y) {
 
 function reflectRay(ray, normal) {
     return vectorSubtraction(
-        vectorMultiplication(normal, 2 * dot(normal, ray)),
+        vectorMultiplication(normal, 2 * vectorDotProduct(normal, ray)),
         ray
     );
 }
@@ -142,7 +142,9 @@ function traceRay(origin, direction, tMin, tMax, recursionDepth) {
         vectorMultiplication(direction, closestT)
     );
 
-    const normal = normalize(vectorSubtraction(point, closestSphere.center)); // Calculate sphere normal
+    const normal = vectorNormalize(
+        vectorSubtraction(point, closestSphere.center)
+    ); // Calculate sphere normal
     const colour = colourMultiplication(
         closestSphere.colour,
         computeLighting(
@@ -180,9 +182,11 @@ function intersectRaySphere(origin, direction, sphere) {
     const sphereOriginVector = vectorSubtraction(origin, sphere.center);
 
     // ot^2 + pt + q = 0 quadratic equation
-    const o = dot(direction, direction);
-    const p = 2 * dot(sphereOriginVector, direction);
-    const q = dot(sphereOriginVector, sphereOriginVector) - radius * radius;
+    const o = vectorDotProduct(direction, direction);
+    const p = 2 * vectorDotProduct(sphereOriginVector, direction);
+    const q =
+        vectorDotProduct(sphereOriginVector, sphereOriginVector) -
+        radius * radius;
 
     // Discrimant determines properties of a quadratic equations roots such as positive/negative
     const discriminant = p * p - 4 * o * q;
@@ -228,7 +232,7 @@ function computeLighting(point, normal, objectToCamera, specular) {
 
             // Diffuse lighting
             // Apply intensity depending on angle hit
-            dotProduct = dot(normal, direction);
+            dotProduct = vectorDotProduct(normal, direction);
 
             // Don't illumnate with negative values (would make it darker)
             if (dotProduct > 0) {
@@ -240,7 +244,10 @@ function computeLighting(point, normal, objectToCamera, specular) {
             // Specular lighting
             if (specular != -1) {
                 const reflection = reflectRay(direction, normal);
-                const reflectionDotProduct = dot(reflection, objectToCamera);
+                const reflectionDotProduct = vectorDotProduct(
+                    reflection,
+                    objectToCamera
+                );
 
                 // Never remove light only add
                 if (reflectionDotProduct > 0) {
@@ -262,11 +269,11 @@ function computeLighting(point, normal, objectToCamera, specular) {
 
 // Math functions
 // Source: https://stackoverflow.com/questions/64816766/dot-product-of-two-arrays-in-javascript
-function dot(a, b) {
+function vectorDotProduct(a, b) {
     return a.map((v, i) => a[i] * b[i]).reduce((sum, v) => sum + v);
 }
 
-function normalize(vector) {
+function vectorNormalize(vector) {
     return vectorDivison(vector, vectorMagnitude(vector));
 }
 
