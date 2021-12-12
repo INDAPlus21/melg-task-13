@@ -64,7 +64,7 @@ function traceRay(origin, viewportPosition, tMin, tMax) {
     // Get colour of closest sphere
     for (sphere of spheres) {
         [t1, t2] = intersectRaySphere(origin, viewportPosition, sphere);
-        console.log(t1 + ", " + t2);
+
         if (t1 >= tMin && t1 <= tMax && t1 < closestT) {
             closestT = t1;
             closestSphere = sphere;
