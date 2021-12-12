@@ -41,7 +41,7 @@ const lights = [
     {
         type: DIRECTIONAL,
         intensity: 0.2,
-        direction: [1, 4, 4],
+        direction: [0, 0, -1],
     },
 ];
 
@@ -114,12 +114,13 @@ function traceRay(origin, viewportPosition, tMin, tMax) {
     );
 
     let normal = normalize(vectorSubtraction(point, closestSphere.center)); // Calculate sphere normal
+
     return colourMultiplication(
         closestSphere.colour,
         computeLighting(
             point,
             normal,
-            -viewportPosition,
+            vectorInverse(viewportPosition),
             closestSphere.specular
         )
     );
@@ -181,13 +182,17 @@ function computeLighting(point, normal, objectToCamera, specular) {
                 );
 
                 const reflectionDotProduct = dot(reflection, objectToCamera);
+
                 // Never remove light only add
                 if (reflectionDotProduct > 0) {
-                    intensity +=
-                        (light.intensity * reflectionDotProduct) /
+                    const normalizedReflectionDotProduct =
+                        reflectionDotProduct /
                         (vectorMagnitude(reflection) *
-                            vectorMagnitude(objectToCamera)) **
-                            specular;
+                            vectorMagnitude(objectToCamera));
+                    const intensityMultiplier =
+                        normalizedReflectionDotProduct ** specular;
+
+                    intensity += light.intensity * intensityMultiplier;
                 }
             }
         }
@@ -216,6 +221,10 @@ function vectorSubtraction(a, b) {
 
 function vectorMultiplication(vector, value) {
     return vector.map((v) => v * value);
+}
+
+function vectorInverse(vector) {
+    return vector.map((v) => -v);
 }
 
 function colourMultiplication(vector, value) {
