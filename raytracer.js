@@ -20,13 +20,13 @@ let spheres = [
 
 window.onload = function () {
     canvas = document.getElementById("image");
-    canvasWidth = canvas.width / 2;
-    canvasHeight = canvas.height / 2;
+    canvasWidth = canvas.width;
+    canvasHeight = canvas.height;
 
     // Get all pixels on canvas
     // Source: https://stackoverflow.com/questions/46017660/html5-canvas-better-pixel-control-and-better-speed
     context = canvas.getContext("2d");
-    imageData = context.createImageData(canvasWidth * 2, canvasHeight * 2);
+    imageData = context.createImageData(canvasWidth, canvasHeight);
     pixels = imageData.data;
 
     drawCanvas();
@@ -34,14 +34,15 @@ window.onload = function () {
 
 function drawCanvas() {
     // Finds colour for each pixel and draws to canvas
-    for (let x = -canvasWidth; x < canvasWidth; x++) {
-        for (let y = -canvasHeight; y < canvasHeight; y++) {
+    for (let x = -canvasWidth / 2; x < canvasWidth / 2; x++) {
+        for (let y = -canvasHeight / 2; y < canvasHeight / 2; y++) {
             viewportPosition = canvasToViewport(x, y);
             colour = traceRay([0, 0, 0], viewportPosition, 1, Infinity);
 
             // Pixels is an array of pixels where each pixels has four values: r, g, b and a
             const imageIndex =
-                (x + canvasWidth + (y + canvasHeight) * canvasHeight * 2) * 4;
+                (x + canvasWidth / 2 + (y + canvasHeight / 2) * canvasHeight) *
+                4;
             pixels[imageIndex] = colour[0]; // r
             pixels[imageIndex + 1] = colour[1]; // g
             pixels[imageIndex + 2] = colour[2]; // b
