@@ -218,7 +218,7 @@ function computeLighting(point, normal, objectToCamera, specular) {
             [shadowSphere, shadowT] = closestIntersection(
                 point,
                 direction,
-                0.0001,
+                0.001,
                 tMax
             );
 
@@ -263,7 +263,7 @@ function computeLighting(point, normal, objectToCamera, specular) {
 // Math functions
 // Source: https://stackoverflow.com/questions/64816766/dot-product-of-two-arrays-in-javascript
 function dot(a, b) {
-    return a.map((x, i) => a[i] * b[i]).reduce((m, n) => m + n);
+    return a.map((v, i) => a[i] * b[i]).reduce((sum, v) => sum + v);
 }
 
 function normalize(vector) {
@@ -301,5 +301,5 @@ function vectorDivison(vector, value) {
 }
 
 function vectorMagnitude(vector) {
-    return vector.reduce((sum, v) => sum + v ** 2);
+    return Math.sqrt(vector.reduce((sum, v) => sum + v ** 2));
 }
