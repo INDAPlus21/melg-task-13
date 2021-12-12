@@ -301,5 +301,5 @@ function vectorDivison(vector, value) {
 }
 
 function vectorMagnitude(vector) {
-    return Math.sqrt(vector.reduce((sum, v) => sum + v ** 2));
+    return Math.sqrt(vector.reduce((sum, v) => sum + v ** 2, 0));
 }
