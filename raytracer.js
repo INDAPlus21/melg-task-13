@@ -4,22 +4,33 @@ let canvas, canvasWidth, canvasHeight, context, imageData, pixels; // Global var
 // Higher specular = more shiny
 const spheres = [
     {
-        center: [0, -1, 3],
+        center: [0, 1, 3],
         radius: 1,
         colour: [255, 0, 0],
         specular: 500,
+        reflection: 0.2,
     },
     {
         center: [2, 0, 4],
         radius: 1,
         colour: [0, 0, 255],
-        specular: 10,
+        specular: 500,
+        reflection: 0.3,
     },
     {
         center: [-2, 0, 4],
         radius: 1,
         colour: [0, 255, 0],
+        specular: 10,
+        reflection: 0.4,
+    },
+    // Ground
+    {
+        center: [0, 5001, 0],
+        radius: 5000,
+        colour: [255, 255, 0],
         specular: 1000,
+        reflective: 0.5,
     },
 ];
 
@@ -36,12 +47,12 @@ const lights = [
     {
         type: POINT,
         intensity: 0.6,
-        position: [2, 1, 0],
+        position: [2, -1, 0],
     },
     {
         type: DIRECTIONAL,
         intensity: 0.2,
-        direction: [0, 0, -1],
+        direction: [1, -4, 4],
     },
 ];
 
@@ -64,7 +75,7 @@ function drawCanvas() {
     for (let x = -canvasWidth / 2; x < canvasWidth / 2; x++) {
         for (let y = -canvasHeight / 2; y < canvasHeight / 2; y++) {
             viewportPosition = canvasToViewport(x, y);
-            colour = traceRay([0, 0, 0], viewportPosition, 1, Infinity);
+            colour = traceRay([0, 0, 0], viewportPosition, 1, Infinity, 3);
 
             // Pixels is an array of pixels where each pixels has four values: r, g, b and a
             const imageIndex =
@@ -85,13 +96,20 @@ function canvasToViewport(x, y) {
     return [x / canvasWidth, y / canvasHeight, 1];
 }
 
-function traceRay(origin, viewportPosition, tMin, tMax) {
+function reflectRay(ray, normal) {
+    return vectorSubtraction(
+        vectorMultiplication(normal, 2 * dot(normal, ray)),
+        ray
+    );
+}
+
+function closestIntersection(origin, direction, tMin, tMax) {
     let closestT = Infinity;
     let closestSphere = null;
 
     // Get colour of closest sphere
     for (sphere of spheres) {
-        [t1, t2] = intersectRaySphere(origin, viewportPosition, sphere);
+        [t1, t2] = intersectRaySphere(origin, direction, sphere);
 
         if (t1 >= tMin && t1 <= tMax && t1 < closestT) {
             closestT = t1;
@@ -104,35 +122,66 @@ function traceRay(origin, viewportPosition, tMin, tMax) {
         }
     }
 
+    return [closestSphere, closestT];
+}
+
+function traceRay(origin, direction, tMin, tMax, recursionDepth) {
+    [closestSphere, closestT] = closestIntersection(
+        origin,
+        direction,
+        tMin,
+        tMax
+    );
+
     if (closestSphere === null) {
         return [255, 255, 255]; // Return white
     }
 
-    let point = vectorAddition(
+    const point = vectorAddition(
         origin,
-        vectorMultiplication(viewportPosition, closestT)
+        vectorMultiplication(direction, closestT)
     );
 
-    let normal = normalize(vectorSubtraction(point, closestSphere.center)); // Calculate sphere normal
-
-    return colourMultiplication(
+    const normal = normalize(vectorSubtraction(point, closestSphere.center)); // Calculate sphere normal
+    const colour = colourMultiplication(
         closestSphere.colour,
         computeLighting(
             point,
             normal,
-            vectorInverse(viewportPosition),
+            vectorInverse(direction),
             closestSphere.specular
         )
     );
+
+    // Prevent infinite recursion
+    const reflective = closestSphere.reflection;
+    if (recursionDepth === 0 || reflective <= 0) {
+        return colour;
+    }
+
+    // Compute reflection colour
+    const ray = reflectRay(vectorInverse(direction), normal);
+    const reflectedColour = traceRay(
+        point,
+        ray,
+        0.001,
+        Infinity,
+        recursionDepth - 1
+    );
+
+    return colourAddition(
+        colourMultiplication(colour, 1 - reflective),
+        colourMultiplication(reflectedColour, reflective)
+    );
 }
 
-function intersectRaySphere(origin, viewportPosition, sphere) {
+function intersectRaySphere(origin, direction, sphere) {
     const radius = sphere.radius;
     const sphereOriginVector = vectorSubtraction(origin, sphere.center);
 
     // ot^2 + pt + q = 0 quadratic equation
-    const o = dot(viewportPosition, viewportPosition);
-    const p = 2 * dot(sphereOriginVector, viewportPosition);
+    const o = dot(direction, direction);
+    const p = 2 * dot(sphereOriginVector, direction);
     const q = dot(sphereOriginVector, sphereOriginVector) - radius * radius;
 
     // Discrimant determines properties of a quadratic equations roots such as positive/negative
@@ -159,8 +208,22 @@ function computeLighting(point, normal, objectToCamera, specular) {
             let direction;
             if (light.type === POINT) {
                 direction = vectorSubtraction(light.position, point);
+                tMax = 1;
             } else {
                 direction = light.direction;
+                tMax = Infinity;
+            }
+
+            // Shadow check
+            [shadowSphere, shadowT] = closestIntersection(
+                point,
+                direction,
+                0.0001,
+                tMax
+            );
+
+            if (shadowSphere != null) {
+                continue; // In shade
             }
 
             // Diffuse lighting
@@ -176,11 +239,7 @@ function computeLighting(point, normal, objectToCamera, specular) {
 
             // Specular lighting
             if (specular != -1) {
-                const reflection = vectorSubtraction(
-                    vectorMultiplication(normal, 2 * dotProduct),
-                    direction
-                );
-
+                const reflection = reflectRay(direction, normal);
                 const reflectionDotProduct = dot(reflection, objectToCamera);
 
                 // Never remove light only add
@@ -231,6 +290,10 @@ function colourMultiplication(vector, value) {
     return vectorMultiplication(vector, value).map((v) =>
         Math.max(0, Math.min(255, v))
     );
+}
+
+function colourAddition(a, b) {
+    return vectorAddition(a, b).map((v) => Math.max(0, Math.min(255, v)));
 }
 
 function vectorDivison(vector, value) {
