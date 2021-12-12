@@ -1,20 +1,47 @@
 // A simple raytracer based on https://www.gabrielgambetta.com/computer-graphics-from-scratch/02-basic-raytracing.html
 let canvas, canvasWidth, canvasHeight, context, imageData, pixels; // Global variables instead of passing everything around all the time
-let spheres = [
+
+// Higher specular = more shiny
+const spheres = [
     {
         center: [0, -1, 3],
         radius: 1,
         colour: [255, 0, 0],
+        specular: 500,
     },
     {
         center: [2, 0, 4],
         radius: 1,
         colour: [0, 0, 255],
+        specular: 10,
     },
     {
         center: [-2, 0, 4],
         radius: 1,
         colour: [0, 255, 0],
+        specular: 1000,
+    },
+];
+
+// Light types
+const AMBIENT = 0;
+const POINT = 1;
+const DIRECTIONAL = 2;
+
+const lights = [
+    {
+        type: AMBIENT,
+        intensity: 0.2,
+    },
+    {
+        type: POINT,
+        intensity: 0.6,
+        position: [2, 1, 0],
+    },
+    {
+        type: DIRECTIONAL,
+        intensity: 0.2,
+        direction: [1, 4, 4],
     },
 ];
 
@@ -81,12 +108,26 @@ function traceRay(origin, viewportPosition, tMin, tMax) {
         return [255, 255, 255]; // Return white
     }
 
-    return closestSphere.colour;
+    let point = vectorAddition(
+        origin,
+        vectorMultiplication(viewportPosition, closestT)
+    );
+
+    let normal = normalize(vectorSubtraction(point, closestSphere.center)); // Calculate sphere normal
+    return colourMultiplication(
+        closestSphere.colour,
+        computeLighting(
+            point,
+            normal,
+            -viewportPosition,
+            closestSphere.specular
+        )
+    );
 }
 
 function intersectRaySphere(origin, viewportPosition, sphere) {
     const radius = sphere.radius;
-    const sphereOriginVector = vectorMinus(origin, sphere.center);
+    const sphereOriginVector = vectorSubtraction(origin, sphere.center);
 
     // ot^2 + pt + q = 0 quadratic equation
     const o = dot(viewportPosition, viewportPosition);
@@ -106,17 +147,87 @@ function intersectRaySphere(origin, viewportPosition, sphere) {
     return [t1, t2];
 }
 
+function computeLighting(point, normal, objectToCamera, specular) {
+    let intensity = 0;
+
+    // Add the intensity of all lights together
+    for (light of lights) {
+        if (light.type === AMBIENT) {
+            intensity += light.intensity;
+        } else {
+            let direction;
+            if (light.type === POINT) {
+                direction = vectorSubtraction(light.position, point);
+            } else {
+                direction = light.direction;
+            }
+
+            // Diffuse lighting
+            // Apply intensity depending on angle hit
+            dotProduct = dot(normal, direction);
+
+            // Don't illumnate with negative values (would make it darker)
+            if (dotProduct > 0) {
+                intensity +=
+                    (light.intensity * dotProduct) /
+                    (vectorMagnitude(normal) * vectorMagnitude(direction));
+            }
+
+            // Specular lighting
+            if (specular != -1) {
+                const reflection = vectorSubtraction(
+                    vectorMultiplication(normal, 2 * dotProduct),
+                    direction
+                );
+
+                const reflectionDotProduct = dot(reflection, objectToCamera);
+                // Never remove light only add
+                if (reflectionDotProduct > 0) {
+                    intensity +=
+                        (light.intensity * reflectionDotProduct) /
+                        (vectorMagnitude(reflection) *
+                            vectorMagnitude(objectToCamera)) **
+                            specular;
+                }
+            }
+        }
+    }
+
+    return intensity;
+}
+
 // Math functions
 // Source: https://stackoverflow.com/questions/64816766/dot-product-of-two-arrays-in-javascript
 function dot(a, b) {
     return a.map((x, i) => a[i] * b[i]).reduce((m, n) => m + n);
 }
 
-function vectorMinus(a, b) {
-    newArray = [];
-    for (let i = 0; i < a.length; i++) {
-        newArray.push(a[i] - b[i]);
-    }
+function normalize(vector) {
+    return vectorDivison(vector, vectorMagnitude(vector));
+}
 
-    return newArray;
+function vectorAddition(a, b) {
+    return a.map((v, i) => v + b[i]);
+}
+
+function vectorSubtraction(a, b) {
+    return a.map((v, i) => v - b[i]);
+}
+
+function vectorMultiplication(vector, value) {
+    return vector.map((v) => v * value);
+}
+
+function colourMultiplication(vector, value) {
+    return vectorMultiplication(vector, value).map((v) =>
+        Math.max(0, Math.min(255, v))
+    );
+}
+
+function vectorDivison(vector, value) {
+    return vector.map((v) => v / value);
+}
+
+function vectorMagnitude(vector) {
+    return vector.reduce((sum, v) => sum + v ** 2);
 }
