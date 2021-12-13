@@ -10,7 +10,12 @@
 <body>
     <h1>RAYTRACER</h1>
     <div id="canvasDiv">
-        <canvas width="500" height="500" id="image"></canvas>
+        <canvas width="400" height="400" id="image"></canvas>
+        </div>
+
+    <div id="templateDiv">
+        <p>Select template (takes a few minutes to load)</p>
+        <input id="templateSelection" type="range" min="0" value="0" step="1" onchange="changeTemplate()" />
     </div>
 </body>
 

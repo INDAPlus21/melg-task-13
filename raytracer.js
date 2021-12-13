@@ -1,117 +1,326 @@
 // A simple raytracer based on https://www.gabrielgambetta.com/computer-graphics-from-scratch/02-basic-raytracing.html
 let canvas, canvasWidth, canvasHeight, context, imageData, pixels; // Global variables instead of passing everything around all the time
 
-// Higher specular = more shiny
-const spheres = [
-    // Spheres in room
-    {
-        center: [-0.45, 0.75, 3],
-        radius: 0.25,
-        colour: [0, 0, 255],
-        specular: 2000,
-        reflection: 0.3,
-    },
-    {
-        center: [0.35, 0.65, 2.5],
-        radius: 0.35,
-        colour: [255, 255, 0],
-        specular: 1000,
-        reflection: 0.5,
-    },
-    {
-        center: [0.75, -0.65, 2.5],
-        radius: 0.35,
-        colour: [0, 255, 255],
-        specular: 1000,
-        reflection: 0.5,
-    },
-    // Floor
-    {
-        center: [0, 5001, 0],
-        radius: 5000,
-        colour: [255, 255, 255],
-        specular: 1000,
-        reflection: 0,
-    },
-    // Ceiling
-    {
-        center: [0, -5001, 0],
-        radius: 5000,
-        colour: [255, 255, 255],
-        specular: 1000,
-        reflection: 0,
-    },
-    // Left wall
-    {
-        center: [-5001, 0, 0],
-        radius: 5000,
-        colour: [150, 0, 0],
-        specular: 1000,
-        reflection: 0,
-    },
-    // Right wall
-    {
-        center: [5001, 0, 0],
-        radius: 5000,
-        colour: [0, 150, 0],
-        specular: 1000,
-        reflection: 0,
-    },
-    // Front wall
-    {
-        center: [0, 0, -5001],
-        radius: 5000,
-        colour: [255, 255, 255],
-        specular: 1000,
-        reflection: 1,
-    },
-    // Back wall
-    {
-        center: [0, 0, 5003.5],
-        radius: 5000,
-        colour: [255, 255, 255],
-        specular: 1000,
-        reflection: 1,
-    },
-];
-
 // Light types
 const AMBIENT = 0;
 const POINT = 1;
 const DIRECTIONAL = 2;
 
-const lights = [
-    {
-        type: AMBIENT,
-        intensity: [0.2, 0.2, 0.2],
-    },
-    {
-        type: POINT,
-        intensity: [2.31, 1.86, 0.72], // Slightly orange light like a lightbulb
-        position: [0, -0.99, 2],
-    },
-];
+// Templates
+const template1 = {
+    spheres: [
+        // Spheres in room
+        {
+            center: [-0.45, 0.75, 3],
+            radius: 0.25,
+            colour: [0, 0, 255],
+            specular: 2000, // Higher specular = more shiny
+            reflection: 0.3,
+        },
+        {
+            center: [0.35, 0.65, 2.5],
+            radius: 0.35,
+            colour: [255, 255, 0],
+            specular: 1000,
+            reflection: 0.5,
+        },
+        {
+            center: [0.75, -0.65, 2.5],
+            radius: 0.35,
+            colour: [0, 255, 255],
+            specular: 1000,
+            reflection: 0.5,
+        },
+        // Floor
+        {
+            center: [0, 5001, 0],
+            radius: 5000,
+            colour: [255, 255, 255],
+            specular: 1000,
+            reflection: 0,
+        },
+        // Ceiling
+        {
+            center: [0, -5001, 0],
+            radius: 5000,
+            colour: [255, 255, 255],
+            specular: 1000,
+            reflection: 0,
+        },
+        // Left wall
+        {
+            center: [-5001, 0, 0],
+            radius: 5000,
+            colour: [150, 0, 0],
+            specular: 1000,
+            reflection: 0,
+        },
+        // Right wall
+        {
+            center: [5001, 0, 0],
+            radius: 5000,
+            colour: [0, 150, 0],
+            specular: 1000,
+            reflection: 0,
+        },
+        // Front wall
+        {
+            center: [0, 0, -5001],
+            radius: 5000,
+            colour: [255, 255, 255],
+            specular: 1000,
+            reflection: 1,
+        },
+        // Back wall
+        {
+            center: [0, 0, 5003.5],
+            radius: 5000,
+            colour: [255, 255, 255],
+            specular: 1000,
+            reflection: 1,
+        },
+    ],
+    lights: [
+        {
+            type: AMBIENT,
+            intensity: [0.2, 0.2, 0.2],
+        },
+        {
+            type: POINT,
+            intensity: [2.31, 1.86, 0.72], // Slightly orange light like a lightbulb
+            position: [0, -0.99, 2],
+        },
+    ],
+};
+
+const template2 = {
+    spheres: [
+        // Spheres in room
+        {
+            center: [-0.45, 0.75, 3],
+            radius: 0.25,
+            colour: [0, 0, 255],
+            specular: 2000,
+            reflection: 0.3,
+        },
+        {
+            center: [0.1, 0.65, 2.5],
+            radius: 0.5,
+            colour: [255, 0, 255],
+            specular: 300,
+            reflection: 0.5,
+        },
+        {
+            center: [0.75, -0.65, 2.5],
+            radius: 0.15,
+            colour: [0, 255, 255],
+            specular: 1000,
+            reflection: 0.5,
+        },
+        {
+            center: [0, 0, 2],
+            radius: 0.45,
+            colour: [0, 255, 255],
+            specular: 20,
+            reflection: 0.8,
+        },
+        // Floor
+        {
+            center: [0, 5001, 0],
+            radius: 5000,
+            colour: [255, 255, 255],
+            specular: 1000,
+            reflection: 0,
+        },
+        // Ceiling
+        {
+            center: [0, -5001, 0],
+            radius: 5000,
+            colour: [255, 255, 255],
+            specular: 1000,
+            reflection: 0,
+        },
+        // Left wall
+        {
+            center: [-5001, 0, 0],
+            radius: 5000,
+            colour: [150, 0, 0],
+            specular: 1000,
+            reflection: 1,
+        },
+        // Right wall
+        {
+            center: [5001, 0, 0],
+            radius: 5000,
+            colour: [0, 150, 0],
+            specular: 1000,
+            reflection: 1,
+        },
+        // Front wall
+        {
+            center: [0, 0, -5001],
+            radius: 5000,
+            colour: [255, 255, 255],
+            specular: 1000,
+            reflection: 1,
+        },
+        // Back wall
+        {
+            center: [0, 0, 5003.5],
+            radius: 5000,
+            colour: [255, 255, 255],
+            specular: 1000,
+            reflection: 1,
+        },
+    ],
+    lights: [
+        {
+            type: AMBIENT,
+            intensity: [0.2, 0.2, 0.2],
+        },
+        {
+            type: POINT,
+            intensity: [2.31, 1.86, 0.72], // Slightly orange light like a lightbulb
+            position: [0, -0.99, 2],
+        },
+    ],
+};
+
+const template3 = {
+    spheres: [
+        // Spheres in room
+        {
+            center: [0.45, 0.75, 3],
+            radius: 0.25,
+            colour: [0, 0, 255],
+            specular: 2000,
+            reflection: 0.7,
+        },
+        {
+            center: [0.35, -0.3, 2.5],
+            radius: 0.35,
+            colour: [255, 255, 0],
+            specular: 10,
+            reflection: 0.2,
+        },
+        {
+            center: [0, 0, 2],
+            radius: 0.35,
+            colour: [255, 255, 255],
+            specular: 100,
+            reflection: 0,
+        },
+        // Floor
+        {
+            center: [0, 5001, 0],
+            radius: 5000,
+            colour: [255, 255, 255],
+            specular: 1000,
+            reflection: 0,
+        },
+        // Ceiling
+        {
+            center: [0, -5001, 0],
+            radius: 5000,
+            colour: [255, 255, 255],
+            specular: 1000,
+            reflection: 0,
+        },
+        // Left wall
+        {
+            center: [-5001, 0, 0],
+            radius: 5000,
+            colour: [150, 0, 0],
+            specular: 1000,
+            reflection: 0,
+        },
+        // Right wall
+        {
+            center: [5001, 0, 0],
+            radius: 5000,
+            colour: [0, 150, 0],
+            specular: 1000,
+            reflection: 0,
+        },
+        // Front wall
+        {
+            center: [0, 0, -5001],
+            radius: 5000,
+            colour: [255, 255, 255],
+            specular: 1000,
+            reflection: 0,
+        },
+        // Back wall
+        {
+            center: [0, 0, 5003.5],
+            radius: 5000,
+            colour: [255, 255, 255],
+            specular: 1000,
+            reflection: 0,
+        },
+    ],
+    lights: [
+        {
+            type: AMBIENT,
+            intensity: [0.2, 0.2, 0.2],
+        },
+        {
+            type: POINT,
+            intensity: [3, 0, 0],
+            position: [-1, -0.99, 2],
+        },
+        {
+            type: POINT,
+            intensity: [0, 3, 0],
+            position: [0, -0.99, 2],
+        },
+        {
+            type: POINT,
+            intensity: [0, 0, 3],
+            position: [1, -0.99, 2],
+        },
+    ],
+};
+
+const templates = [template1, template2, template3];
+
+let spheres = templates[0].spheres;
+let lights = templates[1].lights;
 
 window.onload = function () {
+    document.getElementById("templateSelection").max = templates.length - 1;
+
     canvas = document.getElementById("image");
     canvasWidth = canvas.width;
     canvasHeight = canvas.height;
 
+    resetCanvas();
+    drawCanvas();
+};
+
+function changeTemplate() {
+    const input = document.getElementById("templateSelection").value;
+    spheres = templates[input].spheres;
+    lights = templates[input].lights;
+
+    resetCanvas();
+    drawCanvas();
+}
+
+function resetCanvas() {
     // Get all pixels on canvas
     // Source: https://stackoverflow.com/questions/46017660/html5-canvas-better-pixel-control-and-better-speed
     context = canvas.getContext("2d");
     imageData = context.createImageData(canvasWidth, canvasHeight);
     pixels = imageData.data;
-
-    drawCanvas();
-};
+}
 
 function drawCanvas() {
     // Finds colour for each pixel and draws to canvas
     for (let x = -canvasWidth / 2; x < canvasWidth / 2; x++) {
         for (let y = -canvasHeight / 2; y < canvasHeight / 2; y++) {
             viewportPosition = canvasToViewport(x, y);
-            colour = traceRay([0, 0, 0], viewportPosition, 1, Infinity, 100);
+            colour = traceRay([0, 0, 0], viewportPosition, 1, Infinity, 5);
 
             // Pixels is an array of pixels where each pixels has four values: r, g, b and a
             const imageIndex =
