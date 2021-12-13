@@ -30,7 +30,7 @@ const spheres = [
         radius: 5000,
         colour: [255, 255, 0],
         specular: 1000,
-        reflective: 0.5,
+        reflection: 0.5,
     },
 ];
 
@@ -79,7 +79,7 @@ function drawCanvas() {
 
             // Pixels is an array of pixels where each pixels has four values: r, g, b and a
             const imageIndex =
-                (x + canvasWidth / 2 + (y + canvasHeight / 2) * canvasHeight) *
+                (x + canvasWidth / 2 + (y + canvasHeight / 2) * canvasWidth) *
                 4;
             pixels[imageIndex] = colour[0]; // r
             pixels[imageIndex + 1] = colour[1]; // g
@@ -111,12 +111,12 @@ function closestIntersection(origin, direction, tMin, tMax) {
     for (sphere of spheres) {
         [t1, t2] = intersectRaySphere(origin, direction, sphere);
 
-        if (t1 >= tMin && t1 <= tMax && t1 < closestT) {
+        if (t1 > tMin && t1 < tMax && t1 < closestT) {
             closestT = t1;
             closestSphere = sphere;
         }
 
-        if (t2 >= tMin && t2 <= tMax && t2 < closestT) {
+        if (t2 > tMin && t2 < tMax && t2 < closestT) {
             closestT = t2;
             closestSphere = sphere;
         }
@@ -133,7 +133,7 @@ function traceRay(origin, direction, tMin, tMax, recursionDepth) {
         tMax
     );
 
-    if (closestSphere === null) {
+    if (closestSphere == null) {
         return [255, 255, 255]; // Return white
     }
 
@@ -209,11 +209,10 @@ function computeLighting(point, normal, objectToCamera, specular) {
         if (light.type === AMBIENT) {
             intensity += light.intensity;
         } else {
-            let direction;
             if (light.type === POINT) {
                 direction = vectorSubtraction(light.position, point);
                 tMax = 1;
-            } else {
+            } else if (light.type === DIRECTIONAL) {
                 direction = light.direction;
                 tMax = Infinity;
             }
@@ -237,8 +236,7 @@ function computeLighting(point, normal, objectToCamera, specular) {
             // Don't illumnate with negative values (would make it darker)
             if (dotProduct > 0) {
                 intensity +=
-                    (light.intensity * dotProduct) /
-                    (vectorMagnitude(normal) * vectorMagnitude(direction));
+                    (light.intensity * dotProduct) / vectorMagnitude(direction);
             }
 
             // Specular lighting
