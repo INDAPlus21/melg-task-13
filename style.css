@@ -1,0 +1,18 @@
+body {
+    background-color: rgb(53, 53, 53);
+}
+
+h1 {
+    text-align: center;
+}
+
+#canvasDiv {
+    margin-left: auto;
+    margin-right: auto;
+    width: 420px;
+}
+
+canvas {
+    border: 10px solid rgb(87, 87, 87);
+    border-radius: 15px;
+}

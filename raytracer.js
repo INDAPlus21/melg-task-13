@@ -4,33 +4,66 @@ let canvas, canvasWidth, canvasHeight, context, imageData, pixels; // Global var
 // Higher specular = more shiny
 const spheres = [
     {
-        center: [0, 1, 3],
-        radius: 1,
-        colour: [255, 0, 0],
-        specular: 500,
-        reflection: 0.2,
-    },
-    {
-        center: [2, 0, 4],
-        radius: 1,
+        center: [-0.35, 0.65, 3],
+        radius: 0.35,
         colour: [0, 0, 255],
-        specular: 500,
+        specular: 2000,
         reflection: 0.3,
     },
     {
-        center: [-2, 0, 4],
-        radius: 1,
-        colour: [0, 255, 0],
-        specular: 10,
-        reflection: 0.4,
-    },
-    // Ground
-    {
-        center: [0, 5001, 0],
-        radius: 5000,
+        center: [0.35, 0.65, 2.5],
+        radius: 0.35,
         colour: [255, 255, 0],
         specular: 1000,
         reflection: 0.5,
+    },
+    // Floor
+    {
+        center: [0, 5001, 0],
+        radius: 5000,
+        colour: [255, 255, 255],
+        specular: 1000,
+        reflection: 0,
+    },
+    // Ceiling
+    {
+        center: [0, -5001, 0],
+        radius: 5000,
+        colour: [255, 255, 255],
+        specular: 1000,
+        reflection: 0,
+    },
+    // Left wall
+    {
+        center: [-5001, 0, 0],
+        radius: 5000,
+        colour: [150, 0, 0],
+        specular: 1000,
+        reflection: 0,
+    },
+    // Right wall
+    {
+        center: [5001, 0, 0],
+        radius: 5000,
+        colour: [0, 150, 0],
+        specular: 1000,
+        reflection: 0,
+    },
+    // Front wall
+    {
+        center: [0, 0, -5001],
+        radius: 5000,
+        colour: [255, 255, 255],
+        specular: 1000,
+        reflection: 0.9,
+    },
+    // Back wall
+    {
+        center: [0, 0, 5005],
+        radius: 5000,
+        colour: [255, 255, 255],
+        specular: 1000,
+        reflection: 0.9,
     },
 ];
 
@@ -46,13 +79,8 @@ const lights = [
     },
     {
         type: POINT,
-        intensity: 0.6,
-        position: [2, -1, 0],
-    },
-    {
-        type: DIRECTIONAL,
-        intensity: 0.2,
-        direction: [1, -4, 4],
+        intensity: 0.8,
+        position: [0, -0.9, 2],
     },
 ];
 
@@ -156,8 +184,8 @@ function traceRay(origin, direction, tMin, tMax, recursionDepth) {
     );
 
     // Prevent infinite recursion
-    const reflective = closestSphere.reflection;
-    if (recursionDepth === 0 || reflective <= 0) {
+    const reflection = closestSphere.reflection;
+    if (recursionDepth === 0 || reflection <= 0) {
         return colour;
     }
 
@@ -172,8 +200,8 @@ function traceRay(origin, direction, tMin, tMax, recursionDepth) {
     );
 
     return colourAddition(
-        colourMultiplication(colour, 1 - reflective),
-        colourMultiplication(reflectedColour, reflective)
+        colourMultiplication(colour, 1 - reflection),
+        colourMultiplication(reflectedColour, reflection)
     );
 }
 
