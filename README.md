@@ -2,6 +2,7 @@
 
 A simple raytracer built on https://www.gabrielgambetta.com/computer-graphics-from-scratch/02-basic-raytracing.html. Also added coloured lighting and light falloff
 
+
 **Examples:**
 
 ![](example.png)
@@ -10,7 +11,9 @@ A simple raytracer built on https://www.gabrielgambetta.com/computer-graphics-fr
 
 ![](example3.png)
 
-(Tweak the spheres array to get different results)
+(Tweak the spheres array to get different 
+results)
+
 
 **How to run:**
 
