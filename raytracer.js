@@ -3,9 +3,10 @@ let canvas, canvasWidth, canvasHeight, context, imageData, pixels; // Global var
 
 // Higher specular = more shiny
 const spheres = [
+    // Spheres in room
     {
-        center: [-0.35, 0.65, 3],
-        radius: 0.35,
+        center: [-0.45, 0.75, 3],
+        radius: 0.25,
         colour: [0, 0, 255],
         specular: 2000,
         reflection: 0.3,
@@ -14,6 +15,13 @@ const spheres = [
         center: [0.35, 0.65, 2.5],
         radius: 0.35,
         colour: [255, 255, 0],
+        specular: 1000,
+        reflection: 0.5,
+    },
+    {
+        center: [0.75, -0.65, 2.5],
+        radius: 0.35,
+        colour: [0, 255, 255],
         specular: 1000,
         reflection: 0.5,
     },
@@ -55,15 +63,15 @@ const spheres = [
         radius: 5000,
         colour: [255, 255, 255],
         specular: 1000,
-        reflection: 0.9,
+        reflection: 1,
     },
     // Back wall
     {
-        center: [0, 0, 5005],
+        center: [0, 0, 5003.5],
         radius: 5000,
         colour: [255, 255, 255],
         specular: 1000,
-        reflection: 0.9,
+        reflection: 1,
     },
 ];
 
@@ -79,8 +87,8 @@ const lights = [
     },
     {
         type: POINT,
-        intensity: [0.77, 0.62, 0.24], // Slightly orange light like a lightbulb
-        position: [0, -0.9, 2],
+        intensity: vectorMultiplication([0.77, 0.62, 0.24], 3), // Slightly orange light like a lightbulb
+        position: [0, -0.99, 2],
     },
 ];
 
@@ -103,7 +111,7 @@ function drawCanvas() {
     for (let x = -canvasWidth / 2; x < canvasWidth / 2; x++) {
         for (let y = -canvasHeight / 2; y < canvasHeight / 2; y++) {
             viewportPosition = canvasToViewport(x, y);
-            colour = traceRay([0, 0, 0], viewportPosition, 1, Infinity, 3);
+            colour = traceRay([0, 0, 0], viewportPosition, 1, Infinity, 100);
 
             // Pixels is an array of pixels where each pixels has four values: r, g, b and a
             const imageIndex =
@@ -237,10 +245,12 @@ function computeLighting(point, normal, objectToCamera, specular) {
         if (light.type === AMBIENT) {
             intensity = vectorAddition(intensity, light.intensity);
         } else {
-            let direction, tMax;
+            let direction, tMax, lightFalloff;
             if (light.type === POINT) {
                 direction = vectorSubtraction(light.position, point);
                 tMax = 1;
+                // Light strength = 1 / (distance) ^ 2
+                lightFalloff = 1 / vectorMagnitude(direction) ** 2;
             } else if (light.type === DIRECTIONAL) {
                 direction = light.direction;
                 tMax = Infinity;
@@ -266,9 +276,12 @@ function computeLighting(point, normal, objectToCamera, specular) {
             if (dotProduct > 0) {
                 intensity = vectorAddition(
                     intensity,
-                    vectorDivison(
-                        vectorMultiplication(light.intensity, dotProduct),
-                        vectorMagnitude(direction)
+                    vectorMultiplication(
+                        vectorDivison(
+                            vectorMultiplication(light.intensity, dotProduct),
+                            vectorMagnitude(direction)
+                        ),
+                        lightFalloff
                     )
                 );
             }
@@ -293,8 +306,11 @@ function computeLighting(point, normal, objectToCamera, specular) {
                     intensity = vectorAddition(
                         intensity,
                         vectorMultiplication(
-                            light.intensity,
-                            intensityMultiplier
+                            vectorMultiplication(
+                                light.intensity,
+                                intensityMultiplier
+                            ),
+                            lightFalloff
                         )
                     );
                 }
