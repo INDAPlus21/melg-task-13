@@ -75,11 +75,11 @@ const DIRECTIONAL = 2;
 const lights = [
     {
         type: AMBIENT,
-        intensity: 0.2,
+        intensity: [0.2, 0.2, 0.2],
     },
     {
         type: POINT,
-        intensity: 0.8,
+        intensity: [0.77, 0.62, 0.24], // Slightly orange light like a lightbulb
         position: [0, -0.9, 2],
     },
 ];
@@ -173,7 +173,7 @@ function traceRay(origin, direction, tMin, tMax, recursionDepth) {
     const normal = vectorNormalize(
         vectorSubtraction(point, closestSphere.center)
     ); // Calculate sphere normal
-    const colour = colourMultiplication(
+    const colour = colourColourMultiplication(
         closestSphere.colour,
         computeLighting(
             point,
@@ -230,12 +230,12 @@ function intersectRaySphere(origin, direction, sphere) {
 }
 
 function computeLighting(point, normal, objectToCamera, specular) {
-    let intensity = 0;
+    let intensity = [0, 0, 0];
 
     // Add the intensity of all lights together
     for (light of lights) {
         if (light.type === AMBIENT) {
-            intensity += light.intensity;
+            intensity = vectorAddition(intensity, light.intensity);
         } else {
             let direction, tMax;
             if (light.type === POINT) {
@@ -264,8 +264,13 @@ function computeLighting(point, normal, objectToCamera, specular) {
 
             // Don't illumnate with negative values (would make it darker)
             if (dotProduct > 0) {
-                intensity +=
-                    (light.intensity * dotProduct) / vectorMagnitude(direction);
+                intensity = vectorAddition(
+                    intensity,
+                    vectorDivison(
+                        vectorMultiplication(light.intensity, dotProduct),
+                        vectorMagnitude(direction)
+                    )
+                );
             }
 
             // Specular lighting
@@ -285,7 +290,13 @@ function computeLighting(point, normal, objectToCamera, specular) {
                     const intensityMultiplier =
                         normalizedReflectionDotProduct ** specular;
 
-                    intensity += light.intensity * intensityMultiplier;
+                    intensity = vectorAddition(
+                        intensity,
+                        vectorMultiplication(
+                            light.intensity,
+                            intensityMultiplier
+                        )
+                    );
                 }
             }
         }
@@ -324,6 +335,10 @@ function colourMultiplication(vector, value) {
     return vectorMultiplication(vector, value).map((v) =>
         Math.max(0, Math.min(255, v))
     );
+}
+
+function colourColourMultiplication(a, b) {
+    return a.map((v, i) => Math.max(0, Math.min(255, a[i] * b[i])));
 }
 
 function colourAddition(a, b) {
