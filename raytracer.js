@@ -209,6 +209,7 @@ function computeLighting(point, normal, objectToCamera, specular) {
         if (light.type === AMBIENT) {
             intensity += light.intensity;
         } else {
+            let direction, tMax;
             if (light.type === POINT) {
                 direction = vectorSubtraction(light.position, point);
                 tMax = 1;
