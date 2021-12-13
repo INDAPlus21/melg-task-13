@@ -5,11 +5,25 @@ A simple raytracer built on https://www.gabrielgambetta.com/computer-graphics-fr
 
 **Examples:**
 
+Simple example
+
 ![](example.png)
+
+Reflections 1D
 
 ![](example2.png)
 
+Reflections 2D
+
 ![](example3.png)
+
+Reflections 3D (5 bounces)
+
+![](example4.png)
+
+Reflections 3D (10 bounces)
+
+![](example5.png)
 
 (Tweak the spheres array to get different 
 results)
