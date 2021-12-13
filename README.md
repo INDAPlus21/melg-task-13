@@ -25,11 +25,8 @@ Reflections 3D (10 bounces)
 
 ![](example5.png)
 
-(Tweak the spheres array to get different 
-results)
-
-
 **How to run:**
 
 - Double click the html file
-- Wait a few minutes for it to render (simulates 100 bounces)
+- Wait a few minutes for it to render
+- Select a different template to see a different visulization
