@@ -87,7 +87,7 @@ const lights = [
     },
     {
         type: POINT,
-        intensity: vectorMultiplication([0.77, 0.62, 0.24], 3), // Slightly orange light like a lightbulb
+        intensity: [2.31, 1.86, 0.72], // Slightly orange light like a lightbulb
         position: [0, -0.99, 2],
     },
 ];
