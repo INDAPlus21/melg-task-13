@@ -8,6 +8,8 @@ A simple raytracer built on https://www.gabrielgambetta.com/computer-graphics-fr
 
 ![](example2.png)
 
+![](example3.png)
+
 (Tweak the spheres array to get different results)
 
 **How to run:**
